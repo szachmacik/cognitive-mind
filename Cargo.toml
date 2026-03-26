@@ -27,6 +27,8 @@ axum-extra       = "0.9"
 tower            = "0.4"
 tower-http       = { version = "0.5", features = ["cors","trace"] }
 tokio-stream     = "0.1"
+reqwest          = { version = "0.12", features = ["json"] }
+anyhow           = "1"
 
 [profile.release]
 opt-level     = 3
