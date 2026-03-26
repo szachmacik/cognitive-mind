@@ -40,6 +40,7 @@ use tokio::sync::broadcast;
 use tokio_postgres::NoTls;
 use tracing::{error, info, warn};
 use uuid::Uuid;
+mod upstash;
 
 // ── Config ─────────────────────────────────────────────────────────────────
 
@@ -523,6 +524,20 @@ async fn main() {
     // Start heartbeat task
     let hb_state = state.clone();
     tokio::spawn(async move { heartbeat_task(hb_state).await });
+
+    // Start Upstash bridge (reads Supabase-published events, re-broadcasts to WS)
+    if let (Ok(ups_url), Ok(ups_tok)) = (
+        std::env::var("UPSTASH_URL"),
+        std::env::var("UPSTASH_TOKEN"),
+    ) {
+        let ups_state = state.clone();
+        tokio::spawn(async move {
+            upstash_bridge_task(ups_state, ups_url, ups_tok).await
+        });
+        info!("🔗 Upstash bridge enabled");
+    } else {
+        warn!("⚠️ UPSTASH_URL/TOKEN not set — bridge disabled");
+    }
 
     // Build HTTP/WS router
     let app = Router::new()
