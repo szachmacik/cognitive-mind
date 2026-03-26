@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  cognitive-mind:
+    build: .
+    container_name: cognitive-mind
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      - PORT=8765
+      - RUST_LOG=cognitive_mind=info
+      - DATABASE_URL=${COGNITIVE_MIND_DB_URL}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cognitive-mind.rule=Host(`cognitive-mind.ofshore.dev`)"
+      - "traefik.http.routers.cognitive-mind.entrypoints=https"
+      - "traefik.http.routers.cognitive-mind.tls=true"
+      - "traefik.http.routers.cognitive-mind.tls.certresolver=letsencrypt"
+      - "traefik.http.services.cognitive-mind.loadbalancer.server.port=8765"
+    networks:
+      - coolify
+networks:
+  coolify:
+    external: true
